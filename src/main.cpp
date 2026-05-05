@@ -4,6 +4,7 @@
 #include "web_server.h"
 #include "websocket_manager.h"
 #include "spi_manager.h"
+#include "mqtt.h"
 
 void setup() {
   Serial.begin(115200);
@@ -21,10 +22,13 @@ void setup() {
   }
 
   setupWebServer();
+  mqttConnect();
 }
 
 void loop() {
   handleRestart();
+
+  mqttLoop();
 
   if (wifiConnected) {
     sendDemoWebsocketData();

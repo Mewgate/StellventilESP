@@ -1,6 +1,7 @@
 #include "websocket_manager.h"
 
 #include <WiFi.h>
+#include "mqtt.h"
 
 AsyncWebSocket ws("/ws");
 
@@ -28,8 +29,10 @@ void sendWebsocketMessage(const String& message) {
   ws.cleanupClients();
 }
 
+// create Random Data
 void sendDemoWebsocketData() {
   static unsigned long lastSend = 0;
+  static unsigned long lastMqttSend = 0;
 
   if (millis() - lastSend < 500) return;
   lastSend = millis();
@@ -60,4 +63,24 @@ void sendDemoWebsocketData() {
   Serial.println(msg);
 
   sendWebsocketMessage(msg);
+
+  if (lastMqttSend == 0 || millis() - lastMqttSend >= 5000) {
+    lastMqttSend = millis();
+
+    int rssi = WiFi.RSSI();
+    String json = "{";
+    json += "\"flow\":" + String(valveFlow) + ",";
+    json += "\"left\":" + String(leftValue) + ",";
+    json += "\"time\":\"" + timeText + "\",";
+    json += "\"mode\":\"" + mode + "\",";
+    json += "\"rssi\":" + String(rssi);
+    json += "}";
+
+    mqttSend("data", json);
+    mqttSend("flow", String(valveFlow));
+    mqttSend("left", String(leftValue));
+    mqttSend("time", timeText);
+    mqttSend("mode", mode);
+    mqttSend("rssi", String(rssi));
+  }
 }

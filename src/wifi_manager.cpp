@@ -8,6 +8,19 @@
 
 static Preferences preferences;
 
+static const char* wifiStatusText(wl_status_t status) {
+  switch (status) {
+    case WL_IDLE_STATUS: return "WL_IDLE_STATUS";
+    case WL_NO_SSID_AVAIL: return "WL_NO_SSID_AVAIL";
+    case WL_SCAN_COMPLETED: return "WL_SCAN_COMPLETED";
+    case WL_CONNECTED: return "WL_CONNECTED";
+    case WL_CONNECT_FAILED: return "WL_CONNECT_FAILED";
+    case WL_CONNECTION_LOST: return "WL_CONNECTION_LOST";
+    case WL_DISCONNECTED: return "WL_DISCONNECTED";
+    default: return "UNKNOWN";
+  }
+}
+
 String loadSSID() {
   preferences.begin("wifi", true);
   String ssid = preferences.getString("ssid", "");
@@ -38,6 +51,8 @@ void clearCredentials() {
 bool connectToSavedWifi() {
   String ssid = loadSSID();
   String pass = loadPassword();
+  ssid.trim();
+  pass.trim();
 
   if (ssid.isEmpty()) {
     Serial.println("Keine gespeicherten WLAN-Daten gefunden.");
@@ -49,11 +64,42 @@ bool connectToSavedWifi() {
 
   WiFi.mode(WIFI_STA);
   WiFi.setSleep(false);
+  WiFi.disconnect(true, true);
+  delay(300);
+
+  Serial.println("Suche nach WLAN-Netzen...");
+  int networkCount = WiFi.scanNetworks();
+  bool foundSsid = false;
+
+  if (networkCount <= 0) {
+    Serial.println("Keine WLAN-Netze gefunden.");
+  } else {
+    Serial.print("Gefundene WLAN-Netze: ");
+    Serial.println(networkCount);
+
+    for (int i = 0; i < networkCount; i++) {
+      if (WiFi.SSID(i) == ssid) {
+        foundSsid = true;
+        Serial.print("Ziel-WLAN gefunden. RSSI: ");
+        Serial.print(WiFi.RSSI(i));
+        Serial.print(" dBm, Kanal: ");
+        Serial.println(WiFi.channel(i));
+        break;
+      }
+    }
+  }
+
+  WiFi.scanDelete();
+
+  if (!foundSsid) {
+    Serial.println("Ziel-WLAN wurde nicht gefunden. ESP32 kann nur 2.4 GHz WLAN nutzen.");
+  }
+
   WiFi.begin(ssid.c_str(), pass.c_str());
 
   unsigned long start = millis();
 
-  while (WiFi.status() != WL_CONNECTED && millis() - start < 20000) {
+  while (WiFi.status() != WL_CONNECTED && millis() - start < 30000) {
     Serial.print(".");
     delay(500);
   }
@@ -70,6 +116,8 @@ bool connectToSavedWifi() {
   }
 
   Serial.println("Verbindung fehlgeschlagen.");
+  Serial.print("WiFi status: ");
+  Serial.println(wifiStatusText(WiFi.status()));
   return false;
 }
 
