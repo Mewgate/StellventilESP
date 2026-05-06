@@ -64,7 +64,7 @@ void sendDemoWebsocketData() {
 
   sendWebsocketMessage(msg);
 
-  if (lastMqttSend == 0 || millis() - lastMqttSend >= 5000) {
+  if (lastMqttSend == 0 || millis() - lastMqttSend >= 300000) { // 5 min
     lastMqttSend = millis();
 
     int rssi = WiFi.RSSI();

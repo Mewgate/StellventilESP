@@ -3,10 +3,14 @@
 #include <PubSubClient.h>
 
 // --- MQTT CONFIG ---
-const char* MQTT_HOST = "broker.hivemq.com";
+const char* MQTT_HOST = "mqtt.datacake.co";
 const uint16_t MQTT_PORT = 1883;
 
-const char* MQTT_TOPIC_BASE = "stellventilesp/c7750";
+// HIER EINTRAGEN
+const char* MQTT_USER = "a7ab1b44644d72e5c7550394c3f5775652408bce";
+const char* MQTT_PASS = "a7ab1b44644d72e5c7550394c3f5775652408bce";
+
+const char* MQTT_TOPIC_BASE = "dtck-pub/c7750/1a060742-68f5-4aed-9cb0-09e14708cb9d";
 
 static String mqttClientId;
 static unsigned long lastReconnectAttempt = 0;
@@ -52,10 +56,18 @@ void mqttConnect() {
   Serial.print(getMqttClientId());
   Serial.print(" ... ");
 
-  if (mqtt.connect(getMqttClientId().c_str())) {
+  // MIT USERNAME + PASSWORT
+  if (mqtt.connect(
+        getMqttClientId().c_str(),
+        MQTT_USER,
+        MQTT_PASS
+      )) {
+
     Serial.println("connected");
+
     Serial.print("[MQTT] Publish base topic: ");
     Serial.println(MQTT_TOPIC_BASE);
+
   } else {
     Serial.print("failed, rc=");
     Serial.println(mqtt.state());
@@ -94,6 +106,7 @@ void mqttSend(const char* field, String value) {
 
   if (!mqtt.connected()) {
     mqttConnect();
+
     if (!mqtt.connected()) {
       Serial.println("[MQTT] Publish uebersprungen, keine Broker-Verbindung.");
       return;

@@ -6,6 +6,7 @@
 #include "spi_manager.h"
 #include "mqtt.h"
 
+
 void setup() {
   Serial.begin(115200);
   delay(200);
@@ -24,6 +25,7 @@ void setup() {
   setupWebServer();
   mqttConnect();
 }
+
 
 void loop() {
   handleRestart();
