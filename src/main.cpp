@@ -20,8 +20,26 @@ void setup() {
     startConfigAP();
   } else {
     setupMdns();
-  }
 
+
+    // =========================
+    // ZEIT SYNCHRONISIEREN
+    // =========================
+    configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+
+    struct tm timeinfo;
+    Serial.print("[TIME] Warte auf NTP-Zeit");
+
+    while (!getLocalTime(&timeinfo)) {
+      Serial.print(".");
+      delay(500);
+    }
+
+    Serial.println("");
+    Serial.println("[TIME] Zeit synchronisiert");
+    Serial.println(&timeinfo, "%d.%m.%Y %H:%M:%S");
+    
+  }
   setupWebServer();
   mqttConnect();
 }

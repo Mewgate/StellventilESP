@@ -64,7 +64,7 @@ void sendDemoWebsocketData() {
 
   sendWebsocketMessage(msg);
 
-  if (lastMqttSend == 0 || millis() - lastMqttSend >= 300000) { // 5 min
+  if (lastMqttSend == 0 || millis() - lastMqttSend >= 60000) { // 1 min
     lastMqttSend = millis();
 
     int rssi = WiFi.RSSI();
@@ -79,7 +79,6 @@ void sendDemoWebsocketData() {
     mqttSend("data", json);
     mqttSend("flow", String(valveFlow));
     mqttSend("left", String(leftValue));
-    mqttSend("time", timeText);
     mqttSend("mode", mode);
     mqttSend("rssi", String(rssi));
   }
