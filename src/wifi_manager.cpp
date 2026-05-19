@@ -128,6 +128,8 @@ void startConfigAP() {
   delay(300);
 
   WiFi.mode(WIFI_AP);
+  WiFi.softAPsetHostname("esp32setup");
+  WiFi.setSleep(false);
   delay(500);
 
   bool ok = WiFi.softAP(AP_SSID, AP_PASS, 6, 0, 4);

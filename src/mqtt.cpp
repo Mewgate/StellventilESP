@@ -58,114 +58,114 @@ WiFiClientSecure mqttWifiClient;
 PubSubClient mqtt(mqttWifiClient);
 
 static String getMqttClientId() {
-  if (mqttClientId.length() == 0) {
-    mqttClientId = "ESP32_C7750_";
-    mqttClientId += WiFi.macAddress();
-    mqttClientId.replace(":", "");
-  }
+if (mqttClientId.length() == 0) {
+  mqttClientId = "ESP32_C7750_";
+  mqttClientId += WiFi.macAddress();
+  mqttClientId.replace(":", "");
+}
 
-  return mqttClientId;
+return mqttClientId;
 }
 
 // =========================
 // MQTT CONNECT
 // =========================
 void mqttConnect() {
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("[MQTT] WLAN nicht verbunden, MQTT wird uebersprungen.");
-    return;
-  }
-  //mqttWifiClient.setInsecure(); // without Certifikate
-  mqttWifiClient.setCACert(root_ca); // with Certifikate
-  mqtt.setServer(MQTT_HOST, MQTT_PORT);
-  mqtt.setKeepAlive(30);
-  mqtt.setSocketTimeout(10);
+if (WiFi.status() != WL_CONNECTED) {
+  Serial.println("[MQTT] WLAN nicht verbunden, MQTT wird uebersprungen.");
+  return;
+}
+//mqttWifiClient.setInsecure(); // without Certifikate
+mqttWifiClient.setCACert(root_ca); // with Certifikate
+mqtt.setServer(MQTT_HOST, MQTT_PORT);
+mqtt.setKeepAlive(30);
+mqtt.setSocketTimeout(10);
 
-  if (mqtt.connected()) {
-    return;
-  }
+if (mqtt.connected()) {
+  return;
+}
 
-  lastReconnectAttempt = millis();
+lastReconnectAttempt = millis();
 
-  Serial.print("[MQTT] Connecting to ");
-  Serial.print(MQTT_HOST);
-  Serial.print(":");
-  Serial.print(MQTT_PORT);
-  Serial.print(" as ");
-  Serial.print(getMqttClientId());
-  Serial.print(" ... ");
+Serial.print("[MQTT] Connecting to ");
+Serial.print(MQTT_HOST);
+Serial.print(":");
+Serial.print(MQTT_PORT);
+Serial.print(" as ");
+Serial.print(getMqttClientId());
+Serial.print(" ... ");
 
-  // MIT USERNAME + PASSWORT
-  if (mqtt.connect(
-        getMqttClientId().c_str(),
-        MQTT_USER,
-        MQTT_PASS
-      )) {
+// MIT USERNAME + PASSWORT
+if (mqtt.connect(
+      getMqttClientId().c_str(),
+      MQTT_USER,
+      MQTT_PASS
+    )) {
 
-    Serial.println("connected");
+  Serial.println("connected");
 
-    Serial.print("[MQTT] Publish base topic: ");
-    Serial.println(MQTT_TOPIC_BASE);
+  Serial.print("[MQTT] Publish base topic: ");
+  Serial.println(MQTT_TOPIC_BASE);
 
-  } else {
-    Serial.print("failed, rc=");
-    Serial.println(mqtt.state());
-  }
+} else {
+  Serial.print("failed, rc=");
+  Serial.println(mqtt.state());
+}
 }
 
 // =========================
 // MQTT LOOP
 // =========================
 void mqttLoop() {
-  if (WiFi.status() != WL_CONNECTED) {
-    return;
-  }
+if (WiFi.status() != WL_CONNECTED) {
+  return;
+}
 
-  if (!mqtt.connected()) {
-    unsigned long now = millis();
+if (!mqtt.connected()) {
+  unsigned long now = millis();
 
-    if (now - lastReconnectAttempt >= 5000) {
-      lastReconnectAttempt = now;
-      mqttConnect();
-    }
+  if (now - lastReconnectAttempt >= 5000) {
+    lastReconnectAttempt = now;
+    mqttConnect();
   }
+}
 
-  if (mqtt.connected()) {
-    mqtt.loop();
-  }
+if (mqtt.connected()) {
+  mqtt.loop();
+}
 }
 
 // =========================
 // MQTT SEND
 // =========================
 void mqttSend(const char* field, String value) {
-  if (WiFi.status() != WL_CONNECTED) {
-    return;
-  }
+if (WiFi.status() != WL_CONNECTED) {
+  return;
+}
+
+if (!mqtt.connected()) {
+  mqttConnect();
 
   if (!mqtt.connected()) {
-    mqttConnect();
-
-    if (!mqtt.connected()) {
-      Serial.println("[MQTT] Publish uebersprungen, keine Broker-Verbindung.");
-      return;
-    }
+    Serial.println("[MQTT] Publish uebersprungen, keine Broker-Verbindung.");
+    return;
   }
+}
 
-  String topic = MQTT_TOPIC_BASE;
-  topic += "/";
-  topic += field;
+String topic = MQTT_TOPIC_BASE;
+topic += "/";
+topic += field;
 
-  Serial.print("[MQTT] Publish ");
-  Serial.print(topic);
-  Serial.print(" = ");
-  Serial.println(value);
+Serial.print("[MQTT] Publish ");
+Serial.print(topic);
+Serial.print(" = ");
+Serial.println(value);
 
-  bool ok = mqtt.publish(topic.c_str(), value.c_str(), false);
+bool ok = mqtt.publish(topic.c_str(), value.c_str(), false);
 
-  if (ok) {
-    Serial.println("[MQTT] Publish OK");
-  } else {
-    Serial.println("[MQTT] Publish FEHLGESCHLAGEN");
-  }
+if (ok) {
+  Serial.println("[MQTT] Publish OK");
+} else {
+  Serial.println("[MQTT] Publish FEHLGESCHLAGEN");
+}
 }

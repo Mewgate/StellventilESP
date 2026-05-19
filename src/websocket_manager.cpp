@@ -34,7 +34,7 @@ void sendDemoWebsocketData() {
   static unsigned long lastSend = 0;
   static unsigned long lastMqttSend = 0;
 
-  if (millis() - lastSend < 500) return;
+  if (millis() - lastSend < 500) return;   //0.5 sec value
   lastSend = millis();
 
   int valveFlow = random(0, 50001);

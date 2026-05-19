@@ -20,11 +20,14 @@ void setup() {
     startConfigAP();
   } else {
     setupMdns();
+  }
 
+  setupWebServer();
 
-    // =========================
-    // ZEIT SYNCHRONISIEREN
-    // =========================
+  if (wifiConnected) {
+
+    //========== ZEIT SYNCHRONISIEREN =============================
+
     configTime(0, 0, "pool.ntp.org", "time.nist.gov");
 
     struct tm timeinfo;
@@ -38,14 +41,18 @@ void setup() {
     Serial.println("");
     Serial.println("[TIME] Zeit synchronisiert");
     Serial.println(&timeinfo, "%d.%m.%Y %H:%M:%S");
-    
+
+    //===============================================================
   }
-  setupWebServer();
+
   mqttConnect();
 }
 
 
 void loop() {
+
+  handleWifiConnectAttempt();
+
   handleRestart();
 
   mqttLoop();
