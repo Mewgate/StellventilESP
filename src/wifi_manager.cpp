@@ -5,6 +5,7 @@
 #include <Preferences.h>
 
 #include "config.h"
+#include "device_identity.h"
 
 static Preferences preferences;
 
@@ -132,7 +133,8 @@ void startConfigAP() {
   WiFi.setSleep(false);
   delay(500);
 
-  bool ok = WiFi.softAP(AP_SSID, AP_PASS, 6, 0, 4);
+  String setupSsid = String(AP_SSID) + "-" + getDeviceShortId();
+  bool ok = WiFi.softAP(setupSsid.c_str(), AP_PASS, 6, 0, 4);
 
   if (ok) {
     Serial.println("Setup-AP gestartet.");
@@ -148,11 +150,13 @@ void startConfigAP() {
 void setupMdns() {
   if (!wifiConnected) return;
 
-  if (MDNS.begin(MDNS_NAME)) {
+  String mdnsName = getDeviceMdnsName();
+
+  if (MDNS.begin(mdnsName.c_str())) {
     Serial.println("mDNS responder started");
     MDNS.addService("http", "tcp", 80);
     Serial.print("Dashboard erreichbar unter: http://");
-    Serial.print(MDNS_NAME);
+    Serial.print(mdnsName);
     Serial.println(".local");
   } else {
     Serial.println("mDNS failed");

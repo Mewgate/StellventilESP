@@ -1,5 +1,9 @@
 #include "html_pages.h"
 
+#include <WiFi.h>
+
+#include "device_identity.h"
+
 const char INDEX_HTML[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html lang="de">
@@ -35,15 +39,21 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
       color: var(--text-color);
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: flex-start;
       align-items: center;
-      height: 100vh;
+      gap: 16px;
+      min-height: 100vh;
+      padding: 92px 10px 18px 10px;
+      box-sizing: border-box;
+      overflow-x: hidden;
       caret-color: transparent;
     }
 
     @media (min-width: 768px) {
       body {
         flex-direction: row;
+        justify-content: center;
+        padding-top: 75px;
       }
     }
 
@@ -55,9 +65,9 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       text-align: center;
       width: 400px;
-      height: auto;
+      min-height: 430px;
       position: relative;
-      margin: 10px;
+      margin: 0;
       border: 1px solid rgba(0,0,0,0.2);
     }
 
@@ -199,6 +209,109 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
       margin: 30px;
     }
 
+    .chart-card {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    @media (max-width: 767px) {
+      .card {
+        width: min(100%, 320px);
+        min-height: 348px;
+        border-radius: 14px;
+      }
+
+      .gauge {
+        width: 200px;
+        height: 200px;
+        margin-top: 58px;
+      }
+
+      .gauge::before {
+        width: 186px;
+        height: 186px;
+      }
+
+      .needle {
+        width: 9px;
+        height: 78px;
+      }
+
+      .center-dot {
+        width: 14px;
+        height: 14px;
+      }
+
+      .value {
+        font-size: 30px;
+        bottom: 14px;
+        right: 38px;
+      }
+
+      .label {
+        font-size: 18px;
+        bottom: 58px;
+        right: 62px;
+      }
+
+      .modeContainer {
+        width: auto;
+        margin: 10px 18px 18px 18px;
+        padding: 4px;
+      }
+
+      .modeContainer h2 {
+        font-size: 20px;
+        margin: 10px 0;
+      }
+
+      .chart {
+        width: 276px;
+        max-width: calc(100vw - 64px);
+        height: 190px;
+        margin: 16px auto;
+      }
+
+      .leftshoulder,
+      .rightshoulder {
+        width: 68px;
+        top: 20px;
+      }
+
+      .leftshoulder {
+        left: 20px;
+      }
+
+      .rightshoulder {
+        right: 20px;
+      }
+
+      .value-shoulder-left {
+        top: 30px;
+        left: 30px;
+        font-size: 15px;
+      }
+
+      .label2 {
+        top: 48px;
+        left: 30px;
+        font-size: 12px;
+      }
+
+      .value-shoulder-right {
+        top: 30px;
+        right: 30px;
+        font-size: 15px;
+      }
+
+      .label3 {
+        top: 48px;
+        right: 30px;
+        font-size: 12px;
+      }
+    }
+
     .logo {
       position: absolute;
       height: 65px;
@@ -241,12 +354,36 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
       top: 48px;
       right: 0;
       margin-top: 8px;
-      min-width: 180px;
+      min-width: 220px;
       background: var(--card-color);
       border: 1px solid rgba(0,0,0,0.2);
       border-radius: 8px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.25);
       padding: 8px;
+    }
+
+    .dashboard-menu-info {
+      padding: 8px 10px 10px 10px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid rgba(0,0,0,0.16);
+      color: var(--heading-color);
+    }
+
+    .dashboard-menu-label {
+      font-size: 11px;
+      color: var(--text-color);
+      opacity: 0.72;
+      margin-bottom: 3px;
+    }
+
+    .dashboard-menu-value {
+      font-size: 14px;
+      font-weight: bold;
+      overflow-wrap: anywhere;
+    }
+
+    .dashboard-menu-value + .dashboard-menu-label {
+      margin-top: 8px;
     }
 
     .dashboard-menu-panel button {
@@ -264,15 +401,16 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
 
     .logobar {
       background-color: var(--card-color);
-      position: absolute;
+      position: fixed;
       top: 0;
       right: 0;
+      left: 0;
       width: 100%;
       height: 75px;
       user-select: none;
       border: 1px solid rgba(0,0,0,0.2);
       box-shadow: 0 5px 10px rgba(0,0,0,0.3);
-      z-index: 10;
+      z-index: 100;
     }
 
   </style>
@@ -282,6 +420,12 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
     <details class="dashboard-menu">
       <summary aria-label="Menü">☰</summary>
       <div class="dashboard-menu-panel">
+        <div class="dashboard-menu-info">
+          <div class="dashboard-menu-label">Stellventil</div>
+          <div class="dashboard-menu-value">%DEVICE_NAME%</div>
+          <div class="dashboard-menu-label">IP-Adresse</div>
+          <div class="dashboard-menu-value">%DEVICE_IP%</div>
+        </div>
         <form action="/reset" method="GET">
           <button type="submit">WLAN Reset</button>
         </form>
@@ -323,10 +467,10 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
     </div>
   </div>
 
-  <div class="card">
-  <div class="chart">
-    <canvas id="flowChart"></canvas>
-  </div>
+  <div class="card chart-card">
+    <div class="chart">
+      <canvas id="flowChart"></canvas>
+    </div>
 </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -607,26 +751,68 @@ const char SAVED_HTML[] PROGMEM = R"rawliteral(
       color:#666;
       margin-top:12px;
     }
+    .dashboard-url{
+      margin:16px 0;
+      padding:12px;
+      border-radius:10px;
+      background:#f3f4f6;
+      overflow-wrap:anywhere;
+    }
     a{
       color:#d97706;
       font-weight:bold;
       text-decoration:none;
+    }
+    button{
+      margin-top:12px;
+      width:100%;
+      padding:12px;
+      border:none;
+      border-radius:10px;
+      background:orange;
+      color:white;
+      font-size:16px;
+      font-weight:bold;
+      cursor:pointer;
     }
   </style>
 </head>
 <body>
   <div class="card">
     <h2>WLAN gespeichert</h2>
-    <p>Verbindung startet neu</p>
-    <p>Manueller link zum Dashboard</p>
-    <p>%DASHBOARD_LINK%</p>
-    <p class="hint">%REDIRECT_HINT%</p>
+    <p><strong>%DEVICE_NAME%</strong></p>
+    <p>Der ESP ist jetzt im Ziel-WLAN erreichbar.</p>
+    <p class="hint">Verbinde dieses Gerät mit demselben WLAN und öffne dann diese Adresse:</p>
+    <p class="dashboard-url">%DASHBOARD_LINK%</p>
+    <p class="hint">%MDNS_LINK%</p>
+    <button type="button" onclick="startRedirect()">Automatische Weiterleitung starten</button>
     <p class="hint">
+      Die IP bleibt hier sichtbar, falls die Weiterleitung von diesem Gerät aus nicht erreichbar ist.
+    </p>
+    <p class="hint" style="display:none">
       Falls es nicht automatisch klappt, bitte nach ein paar Sekunden manuell öffnen.
     </p>
   </div>
   <script>
-    %REDIRECT_SCRIPT%
+    function startRedirect() {
+      var button = document.querySelector("button");
+      var secondsLeft = %REDIRECT_SECONDS%;
+      button.disabled = true;
+      button.textContent = "Weiterleitung in " + secondsLeft + " Sekunden...";
+
+      var countdown = setInterval(function() {
+        secondsLeft--;
+
+        if (secondsLeft <= 0) {
+          clearInterval(countdown);
+          button.textContent = "Weiterleitung startet...";
+          window.location.href = "%DASHBOARD_URL%";
+          return;
+        }
+
+        button.textContent = "Weiterleitung in " + secondsLeft + " Sekunden...";
+      }, 1000);
+    }
   </script>
 </body>
 </html>
@@ -778,17 +964,30 @@ const char WIFI_CONNECT_FAILED_HTML[] PROGMEM = R"rawliteral(
 </html>
 )rawliteral";
 
+String buildIndexHtml() {
+  String html = FPSTR(INDEX_HTML);
+  html.replace("%DEVICE_NAME%", getDeviceName());
+  html.replace("%DEVICE_IP%", WiFi.localIP().toString());
+  return html;
+}
+
 String buildSavedHtml(const String& dashboardUrl, unsigned long redirectDelayMs) {
   String html = FPSTR(SAVED_HTML);
+  String mdnsUrl = String("http://") + getDeviceMdnsName() + ".local";
+  html.replace("%DEVICE_NAME%", getDeviceName());
+  html.replace("%MDNS_LINK%", String("Optionaler lokaler Name: <a href=\"") + mdnsUrl + "\">" + mdnsUrl + "</a>");
+
   if (dashboardUrl.isEmpty()) {
     html.replace("%DASHBOARD_LINK%", "Router-IP noch nicht verfuegbar. Bitte die IP nach dem Neustart im Router pruefen.");
-    html.replace("%REDIRECT_HINT%", "");
-    html.replace("%REDIRECT_SCRIPT%", "");
+    html.replace("%DASHBOARD_URL%", "#");
+    html.replace("%REDIRECT_SECONDS%", "0");
+    html.replace("%REDIRECT_DELAY%", "0");
   } else {
     String redirectDelaySeconds = String(redirectDelayMs / 1000);
     html.replace("%DASHBOARD_LINK%", String("<a href=\"") + dashboardUrl + "\">" + dashboardUrl + "</a>");
-    html.replace("%REDIRECT_HINT%", "Automatische Weiterleitung in ca. " + redirectDelaySeconds + " Sekunden.");
-    html.replace("%REDIRECT_SCRIPT%", String("setTimeout(() => { window.location.href = \"") + dashboardUrl + "\"; }, " + redirectDelayMs + ");");
+    html.replace("%DASHBOARD_URL%", dashboardUrl);
+    html.replace("%REDIRECT_SECONDS%", redirectDelaySeconds);
+    html.replace("%REDIRECT_DELAY%", String(redirectDelayMs));
   }
   return html;
 }

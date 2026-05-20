@@ -13,7 +13,7 @@
 static AsyncWebServer server(80);
 
 static const unsigned long SAVE_RESTART_DELAY_MS = 3000;
-static const unsigned long SAVE_REDIRECT_DELAY_MS = 15000;
+static const unsigned long SAVE_REDIRECT_DELAY_MS = 5000;
 static const unsigned long WIFI_CONNECT_TIMEOUT_MS = 15000;
 
 enum WifiConnectState {
@@ -57,7 +57,8 @@ void setupWebServer() {
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
 
     if (wifiConnected) {
-      request->send(200, "text/html; charset=utf-8", INDEX_HTML);
+      String indexHtml = buildIndexHtml();
+      request->send(200, "text/html; charset=utf-8", indexHtml);
     } else {
       request->send(200, "text/html; charset=utf-8", CONFIG_HTML);
     }

@@ -6,7 +6,6 @@
 
 extern const char* AP_SSID;
 extern const char* AP_PASS;
-extern const char* MDNS_NAME;
 
 extern bool wifiConnected;
 extern bool restartPending;
