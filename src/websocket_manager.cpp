@@ -1,6 +1,8 @@
 #include "websocket_manager.h"
 
 #include <WiFi.h>
+
+#include "chart_history.h"
 #include "mqtt.h"
 
 AsyncWebSocket ws("/ws");
@@ -12,7 +14,7 @@ static void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
                   client->id(),
                   client->remoteIP().toString().c_str());
 
-    client->text("12345|22|03:15|Automatik|-61");
+    sendChartHistory(client);
   } else if (type == WS_EVT_DISCONNECT) {
     Serial.printf("WS Client disconnected: id=%u\n", client->id());
   } else if (type == WS_EVT_ERROR) {
@@ -25,7 +27,13 @@ void setupWebSocket() {
 }
 
 void sendWebsocketMessage(const String& message) {
+  String chartMessage;
+  bool hasChartPoint = storeChartHistoryValueFromMessage(message, &chartMessage);
+
   ws.textAll(message);
+  if (hasChartPoint) {
+    ws.textAll(chartMessage);
+  }
   ws.cleanupClients();
 }
 
@@ -34,7 +42,7 @@ void sendDemoWebsocketData() {
   static unsigned long lastSend = 0;
   static unsigned long lastMqttSend = 0;
 
-  if (millis() - lastSend < 500) return;   //0.5 sec value
+  if (millis() - lastSend < 1000) return;  //1 sec value
   lastSend = millis();
 
   int valveFlow = random(0, 50001);

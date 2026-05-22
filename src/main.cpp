@@ -28,7 +28,7 @@ void setup() {
 
     //========== ZEIT SYNCHRONISIEREN =============================
 
-    configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+    configTzTime("CET-1CEST,M3.5.0,M10.5.0/3", "pool.ntp.org", "time.nist.gov");
 
     struct tm timeinfo;
     Serial.print("[TIME] Warte auf NTP-Zeit");
